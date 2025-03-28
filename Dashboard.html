@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Management System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #388e3c;
+            padding: 10px;
+            text-align: center;
+            color: white;
+        }
+        header h1 {
+            margin: 0;
+        }
+        nav {
+            display: flex;
+            justify-content: center;
+            background-color: #2c6e2f;
+        }
+        nav a {
+            padding: 15px 30px;
+            text-decoration: none;
+            color: white;
+            display: block;
+        }
+        nav a:hover {
+            background-color: #4caf50;
+        }
+        .container {
+            padding: 20px;
+        }
+        .form-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .form-container input, .form-container select {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        .form-container button {
+            width: 100%;
+            padding: 10px;
+            background-color: #388e3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .form-container button:hover {
+            background-color: #2e7d32;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table th, table td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+        table th {
+            background-color: #388e3c;
+            color: white;
+        }
+        .total-info {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            font-size: 18px;
+        }
+        .logout {
+            text-align: right;
+            margin-top: 20px;
+        }
+        canvas {
+            margin-top: 30px;
+            width: 100% !important;
+            height: 400px !important;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Inventory Management System</h1>
+</header>
+
+<nav>
+    <a href="#" onclick="showDashboard()">Dashboard</a>
+    <a href="#" onclick="showInventory()">Inventory</a>
+    <a href="#" onclick="showSales()">Sales</a>
+    <a href="#" onclick="logout()">Log Out</a>
+</nav>
+
+<div class="container">
+    <!-- Dashboard Section -->
+    <div id="dashboard" style="display:none;">
+        <h2>Dashboard</h2>
+        <div class="total-info">
+            <div>Total Products: <span id="total-products">0</span></div>
+            <div>Total Amount: $<span id="total-amount">0.00</span></div>
+        </div>
+    </div>
+
+    <!-- Inventory Section -->
+    <div id="inventory">
+        <h2>Inventory</h2>
+        <div class="form-container">
+            <h3>Add New Product</h3>
+            <form id="inventory-form">
+                <input type="text" id="product-name" placeholder="Product Name" required>
+                <input type="number" id="product-quantity" placeholder="Quantity" required>
+                <input type="text" id="product-description" placeholder="Description" required>
+                <input type="number" id="product-price" placeholder="Price" required>
+                <input type="date" id="product-date" required>
+                <button type="submit">Add Product</button>
+            </form>
+        </div>
+
+        <h3>Product List</h3>
+        <div class="total-info">
+            <div>Total Products Sold: <span id="total-sold">0</span></div>
+            <div>Total Amount: $<span id="total-inventory-amount">0.00</span></div>
+        </div>
+        <table id="product-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Quantity</th>
+                    <th>Description</th>
+                    <th>Price</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Dynamic Table Rows Will Go Here -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Sales Section -->
+    <div id="sales" style="display:none;">
+        <h2>Sales</h2>
+        <div class="total-info">
+            <div>Total Sales: $<span id="sales-total-amount">0.00</span></div>
+        </div>
+        <canvas id="salesChart"></canvas>
+    </div>
+
+    <!-- Logout Section -->
+    <div class="logout" style="display:none;">
+        <button onclick="logout()">Log Out</button>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    let products = [];
+    let totalSold = 0;
+    let totalInventoryAmount = 0;
+
+    // Show Dashboard Section
+    function showDashboard() {
+        document.getElementById("dashboard").style.display = "block";
+        document.getElementById("inventory").style.display = "none";
+        document.getElementById("sales").style.display = "none";
+    }
+
+    // Show Inventory Section
+    function showInventory() {
+        document.getElementById("dashboard").style.display = "none";
+        document.getElementById("inventory").style.display = "block";
+        document.getElementById("sales").style.display = "none";
+    }
+
+    // Show Sales Section
+    function showSales() {
+        document.getElementById("dashboard").style.display = "none";
+        document.getElementById("inventory").style.display = "none";
+        document.getElementById("sales").style.display = "block";
+        updateSalesChart();
+    }
+
+    // Logout Function
+    function logout() {
+        window.location.href = "login.html"; // Redirect to login page
+    }
+
+    // Add Product to Inventory
+    document.getElementById("inventory-form").addEventListener("submit", function(event) {
+        event.preventDefault();
+        const name = document.getElementById("product-name").value;
+        const quantity = parseInt(document.getElementById("product-quantity").value);
+        const description = document.getElementById("product-description").value;
+        const price = parseFloat(document.getElementById("product-price").value);
+        const date = document.getElementById("product-date").value;
+
+        // Create Product Object
+        const product = {
+            name,
+            quantity,
+            description,
+            price,
+            date,
+        };
+
+        // Add Product to Array
+        products.push(product);
+
+        // Update Total Sold and Total Inventory Amount
+        totalSold += quantity;
+        totalInventoryAmount += price * quantity;
+
+        // Update Dashboard & Inventory Table
+        updateDashboard();
+        updateInventoryTable();
+    });
+
+    // Update Dashboard
+    function updateDashboard() {
+        const totalAmount = products.reduce((acc, product) => acc + product.price * product.quantity, 0);
+        document.getElementById("total-products").innerText = products.length;
+        document.getElementById("total-amount").innerText = totalAmount.toFixed(2);
+        document.getElementById("total-sold").innerText = totalSold;
+        document.getElementById("total-inventory-amount").innerText = totalInventoryAmount.toFixed(2);
+    }
+
+    // Update Inventory Table
+    function updateInventoryTable() {
+        const tableBody = document.querySelector("#product-table tbody");
+        tableBody.innerHTML = "";
+        products.forEach(product => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${product.name}</td>
+                <td>${product.quantity}</td>
+                <td>${product.description}</td>
+                <td>$${product.price}</td>
+                <td>${product.date}</td>
+            `;
+            tableBody.appendChild(row);
+        });
+    }
+
+    // Update Sales Chart
+    function updateSalesChart() {
+        const ctx = document.getElementById('salesChart').getContext('2d');
+        const labels = products.map(product => product.name);
+        const data = products.map(product => product.price * product.quantity);
+
+        const salesChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Sales Performance',
+                    data: data,
+                    backgroundColor: '#388e3c',
+                    borderColor: '#2c6e2f',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        const totalSales = data.reduce((acc, val) => acc + val, 0);
+        document.getElementById("sales-total-amount").innerText = totalSales.toFixed(2);
+    }
+
+    // Show Dashboard by default on page load
+    showDashboard();
+</script>
+
+</body>
+</html>
